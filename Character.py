@@ -29,10 +29,10 @@ class Character:
                                pygame.image.load('assets/sprites/character_anim/CharacterDeath/Death_anim_6.png'),]
 
     def get_attack_rect(self):
-        return self.attack_pic.get_rect(center=(200, 620))
+        return self.attack_pic.get_rect(center=(420, 620))
 
     def get_body_rect(self):
-        return self.body_pic.get_rect(center=(200, 620))
+        return self.body_pic.get_rect(center=(272, 620))
 
     def die(self):
         return self.deathAnimation
@@ -46,8 +46,8 @@ class Character:
     def get_attack(self):
         return self.BeatAnimation
 
-    def get_frame(self, attack, alive):
-        if not alive:
+    def get_frame(self, attack, Death):
+        if Death:
             return self.deathAnimation
 
         elif attack:
