@@ -9,26 +9,22 @@ pygame.init()
 
 
 class Logic:
-    wave = pygame.mixer.Sound('assets/audio/wing.wav')
-    beat = pygame.mixer.Sound('assets/audio/hit.wav')
-    die = pygame.mixer.Sound('assets/audio/damage1.wav')
-    floor_surface = pygame.image.load('assets/sprites/Background/City4.png')
-    road_surface = pygame.image.load('assets/sprites/Background/road.png')
-    obstacles = [pygame.image.load('assets/sprites/Obstacles/Trash2.png'),
-                 pygame.image.load('assets/sprites/Obstacles/boxes2.png'),
-                 pygame.image.load('assets/sprites/Obstacles/minishop2.png'),
-                 pygame.image.load('assets/sprites/Obstacles/wheels2.png'), ]
+    pass
 
+
+class Logic:
     def __init__(self, screen):
         # Звуки
-        self.wave_sound = Logic.wave
-        self.beat_sound = Logic.beat
-        self.die_sound = Logic.die
+        self.wave_sound = pygame.mixer.Sound('assets/audio/wing.wav')
+        self.beat_sound = pygame.mixer.Sound('assets/audio/hit.wav')
+        self.die_sound = pygame.mixer.Sound('assets/audio/damage1.wav')
         # Группа спрайтов врагов, это понадобится когда добавлю по несколько врагов на сцену
         self.all_enemies = pygame.sprite.Group()
         self.hp = 100
+        self.target_health = 100
         self.max_hp = 100
         self.hp_bar_length = 300
+        self.health_chang_speed = 5
         self.health_ratio = self.max_hp / self.hp_bar_length
         self.EnemyKill = False
         self.EnemyAttack = False
@@ -37,9 +33,12 @@ class Logic:
         self.character_body_rect = Character().get_body_rect()
         self.enemy_sprite = pygame.sprite.Sprite()
         self.EnemyPos = 1280
-        self.floor_surface = Logic.floor_surface
-        self.road_surface = Logic.road_surface
-        self.obstacles = Logic.obstacles
+        self.floor_surface = pygame.image.load('assets/sprites/Background/City4.png')
+        self.road_surface = pygame.image.load('assets/sprites/Background/road.png')
+        self.obstacles = [pygame.image.load('assets/sprites/Obstacles/Trash2.png'),
+                          pygame.image.load('assets/sprites/Obstacles/boxes2.png'),
+                          pygame.image.load('assets/sprites/Obstacles/minishop2.png'),
+                          pygame.image.load('assets/sprites/Obstacles/wheels2.png'), ]
         self.anim_frames = []
         self.enemy_frames = []
         self.screen = screen
@@ -57,11 +56,25 @@ class Logic:
         self.animCount = 0
 
     # Функция отрисовки полосы здоровья
-    def basic_health(self):
-        # Это красная полоса здоровья
-        pygame.draw.rect(self.screen, (255, 0, 0), (10, 10, self.hp / self.health_ratio, 25))
-        # это белая рамка полосы
-        pygame.draw.rect(self.screen, (255, 255, 255), (10, 10, self.hp_bar_length, 25), 2)
+
+    def advanced_health(self):
+        transition_width = 0
+        transition_color = (255, 0, 0)
+        if self.hp < self.target_health:
+            self.hp += self.health_chang_speed
+            transition_width = int((self.target_health - self.hp) / self.health_ratio)
+            transition_color = (0, 255, 0)
+
+        if self.hp > self.target_health:
+            self.hp -= self.health_chang_speed
+            transition_width = int((self.target_health - self.hp) / self.health_ratio)
+            transition_color = (255, 255, 0)
+            print('sdf')
+        health_bar_rect = pygame.Rect(10, 45, self.hp / self.health_ratio, 25)
+        transition_bar_rect = pygame.Rect(health_bar_rect.right, 45, transition_width, 25)
+        pygame.draw.rect(self.screen, (255, 0, 0), health_bar_rect)
+        pygame.draw.rect(self.screen, transition_color, transition_bar_rect)
+        pygame.draw.rect(self.screen, (255, 255, 255), (10, 45, self.hp_bar_length, 25), 2)
 
     # Проигрывает звук
     def reproduce(self, beat=False, wave=False, die=False):
@@ -90,9 +103,9 @@ class Logic:
             if not self.cant_beat:
                 # Если персонаж касается врага, то хп становится на 25 едениц меньше
                 if self.character_body_rect.colliderect(self.enemy_sprite.rect):
-                    self.hp -= 25
+                    self.target_health -= 25
                     if not self.Death:
-                        if self.hp <= 0:
+                        if self.target_health <= 0:
                             self.animCount = 0
                             self.Death = True
                         else:
@@ -215,7 +228,7 @@ if __name__ == '__main__':
                         game.obstaclePos = 0
                         game.Enemy_anim_start.centerx = 1080
                         game.EnemyPos = 1280
-                        game.hp = 100
+                        game.target_health = 100
                         game.Death = False
                         game.EnemyAttack = False
                         game.enemy_sprite.kill()
@@ -229,7 +242,8 @@ if __name__ == '__main__':
             # Если врагов на сцене нет, то добавляем
             if game.value_of_enemies() == 0:
                 game.add_enemy()
-            game.basic_health()
+            #            game.basic_health()
+            game.advanced_health()
             game.animate_enemy()
             game.animate_character()
             game.check_collision()
